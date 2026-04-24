@@ -3,3 +3,4 @@ tokenizers
 numpy
 tqdm
 onnx
+datasets

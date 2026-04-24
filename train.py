@@ -19,22 +19,14 @@ def train():
     if torch.cuda.is_available():
         torch.cuda.manual_seed(1337)
 
-    # Initialize tokenizer and load/train it
-    # For this script, we assume tokenizer.json exists or we train a new one
+    # Initialize tokenizer
     tokenizer = BPETokenizer(vocab_size=config.vocab_size)
     if os.path.exists("tokenizer.json"):
         tokenizer.load("tokenizer.json")
+        config.vocab_size = tokenizer.get_vocab_size()
     else:
-        # If no tokenizer, we might need a small data file to train it
-        print("Tokenizer not found. Please run tokenizer training first or provide data/train.txt")
-        if os.path.exists("data/train.txt"):
-            tokenizer.train(["data/train.txt"])
-        else:
-            print("No training data found at data/train.txt. Exiting.")
-            return
-
-    # Update config vocab size based on tokenizer
-    config.vocab_size = tokenizer.get_vocab_size()
+        print("Tokenizer not found. Please run train_tokenizer.py first.")
+        return
 
     # Initialize model
     model = MiniGPT(config)
@@ -50,89 +42,127 @@ def train():
         model.load_state_dict(checkpoint['model'])
         optimizer.load_state_dict(checkpoint['optimizer'])
         iter_num = checkpoint['iter_num']
-        config = checkpoint['config']
         print(f"Resuming from iteration {iter_num}")
 
     model.to(device)
 
     # Compile model if requested
     if config.compile and device_type == 'cuda':
-        print("compiling the model... (takes a ~minute)")
+        print("compiling the model...")
         model = torch.compile(model)
 
-    # Dataloader
-    if not os.path.exists("data/train.txt"):
-        print("Waiting for data/train.txt...")
+    # Data files
+    data_files = ["data/train.txt", "data/train_bangla.txt"]
+    existing_data = [f for f in data_files if os.path.exists(f)]
+    if not existing_data:
+        print("No training data found. Run prepare scripts first.")
         return
         
-    train_loader = get_dataloader("data/train.txt", tokenizer, config.batch_size, config.context_length)
+    print(f"Loading data from: {existing_data}")
+    # Load all text and split
+    full_text = ""
+    for f in existing_data:
+        with open(f, 'r', encoding='utf-8') as f_in:
+            full_text += f_in.read() + "\n"
+            
+    # Simple train/val split (90% / 10%)
+    n = len(full_text)
+    train_text = full_text[:int(n*0.9)]
+    val_text = full_text[int(n*0.9):]
+    
+    # We save these to temp files for the Dataloader to read
+    # In a real scenario, InstructionDataset should handle text directly
+    with open("data/train_split.txt", "w") as f: f.write(train_text)
+    with open("data/val_split.txt", "w") as f: f.write(val_text)
+    
+    train_loader = get_dataloader("data/train_split.txt", tokenizer, config.batch_size, config.context_length)
+    val_loader = get_dataloader("data/val_split.txt", tokenizer, config.batch_size, config.context_length)
 
     # LR Scheduler (Cosine Decay)
     def get_lr(it):
-        # 1) linear warmup for warmup_iters steps
         if it < config.warmup_iters:
             return config.learning_rate * it / config.warmup_iters
-        # 2) if it > lr_decay_iters, return min learning rate
         if it > config.lr_decay_iters:
             return config.min_lr
-        # 3) in between, use cosine decay down to min learning rate
         decay_ratio = (it - config.warmup_iters) / (config.lr_decay_iters - config.warmup_iters)
-        assert 0 <= decay_ratio <= 1
-        coeff = 0.5 * (1.0 + math.cos(math.pi * decay_ratio)) # coeff ranges 0..1
+        coeff = 0.5 * (1.0 + math.cos(math.pi * decay_ratio))
         return config.min_lr + coeff * (config.learning_rate - config.min_lr)
 
+    @torch.no_grad()
+    def estimate_loss():
+        model.eval()
+        losses = []
+        # Check a few batches for validation
+        count = 0
+        for x, y in val_loader:
+            x, y = x.to(device), y.to(device)
+            _, loss = model(x, y)
+            losses.append(loss.item())
+            count += 1
+            if count >= 20: break # Just estimate on 20 batches
+        model.train()
+        return sum(losses) / len(losses) if losses else 0
+
+    @torch.no_grad()
+    def generate_sample(prompt="User: কেমন আছ?\nAssistant:"):
+        model.eval()
+        idx = torch.tensor(tokenizer.encode(prompt), dtype=torch.long, device=device).unsqueeze(0)
+        # Simple greedy generation
+        for _ in range(30):
+            idx_cond = idx[:, -config.context_length:]
+            logits, _ = model(idx_cond)
+            logits = logits[:, -1, :]
+            idx_next = torch.argmax(logits, dim=-1, keepdim=True)
+            idx = torch.cat((idx, idx_next), dim=1)
+            if idx_next.item() == tokenizer.tokenizer.token_to_id("<|endoftext|>"):
+                break
+        print(f"\n--- Sample ---\n{tokenizer.decode(idx[0].tolist())}\n--------------\n")
+        model.train()
+
     # Training Loop
-    iter_num = 0
     t0 = time.time()
-    
-    model.train()
     print("Starting training...")
     
-    for epoch in range(10): # Example: 10 epochs
+    for epoch in range(10):
         for x, y in train_loader:
             x, y = x.to(device), y.to(device)
             
-            # Determine and set the learning rate for this iteration
             lr = get_lr(iter_num) if config.decay_lr else config.learning_rate
             for param_group in optimizer.param_groups:
                 param_group['lr'] = lr
             
-            # Forward pass
             logits, loss = model(x, y)
-            
-            # Backward pass
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
             
-            # Gradient clipping
             if config.grad_clip != 0.0:
                 torch.nn.utils.clip_grad_norm_(model.parameters(), config.grad_clip)
             
             optimizer.step()
             
-            # Logging
-            if iter_num % 10 == 0:
+            if iter_num % 100 == 0:
+                val_loss = estimate_loss()
                 t1 = time.time()
-                dt = t1 - t0
+                print(f"iter {iter_num}: loss {loss.item():.4f}, val_loss {val_loss:.4f}, time {(t1-t0)*1000/100:.2f}ms/it, lr {lr:e}")
                 t0 = t1
-                print(f"iter {iter_num}: loss {loss.item():.4f}, time {dt*1000:.2f}ms, lr {lr:e}")
+                generate_sample()
             
             iter_num += 1
             
-            # Save checkpoint
-            if iter_num % 500 == 0:
+            if iter_num % 1000 == 0:
                 checkpoint = {
                     'model': model.state_dict(),
                     'optimizer': optimizer.state_dict(),
                     'config': config,
                     'iter_num': iter_num,
                 }
-                print(f"saving checkpoint to ckpt.pt")
                 torch.save(checkpoint, 'ckpt.pt')
 
-    # Final Save
     torch.save(model.state_dict(), "model.pt")
-    print("Training finished. Model saved to model.pt")
+    print("Training finished.")
+
+if __name__ == "__main__":
+    train()
 
 if __name__ == "__main__":
     train()
