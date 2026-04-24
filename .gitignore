@@ -1,0 +1,8 @@
+.venv/*
+*.pt
+data/*
+__pycache__/config.cpython-310.pyc
+__pycache__/dataset.cpython-310.pyc
+__pycache__/model.cpython-310.pyc
+__pycache__/model.cpython-314.pyc
+__pycache__/tokenizer.cpython-310.pyc
