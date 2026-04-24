@@ -2,6 +2,8 @@
 
 [![Repo](https://img.shields.io/badge/GitHub-Repository-blue?logo=github)](https://github.com/mozaddedalfeshani/muradian_model_beta_v0.1)
 
+![Muradian Model Workflow Sketch](docs/workflow_sketch.png)
+
 এটি একটি কাস্টম **Decoder-Only Transformer** ল্যাঙ্গুয়েজ মডেল যা একদম স্ক্র্যাচ (Scratch) থেকে পাইটর্চ (PyTorch) ব্যবহার করে তৈরি করা হয়েছে। এই প্রজেক্টের মূল উদ্দেশ্য হলো একটি ছোট কিন্তু শক্তিশালী মডেল তৈরি করা যা নির্দিষ্ট তথ্যের (যেমন: বাংলা চ্যাট ডাটা) ওপর ভিত্তি করে টেক্সট জেনারেট করতে পারে।
 
 ## 🚀 এটি কিভাবে কাজ করে? (How it works)
@@ -13,6 +15,16 @@
 2. **টোকেনাইজেশন:** টেক্সটগুলোকে BPE (Byte Pair Encoding) ব্যবহার করে ১৬,৩৮৪ ভোকাব সাইজের ছোট ছোট টোকেনে ভাগ করা হয়। এর জন্য `train_tokenizer.py` ব্যবহার করা হয়।
 3. **ট্রেনিং:** `train.py` ব্যবহার করে মডেলটিকে এই ডাটার ওপর ট্রেন করা হয়। এখানে এখন একটি ভ্যালিডেশন লুপ এবং লাইভ স্যাম্পল জেনারেশন অন্তর্ভুক্ত আছে।
 4. **জেনারেশন ও টেস্টিং:** ট্রেনিং শেষ হলে `generate.py` বা `test_questions.py` দিয়ে আমরা মডেলের আউটপুট পরীক্ষা করতে পারি।
+
+### 📂 ডাটা প্রসেসিং পাইপলাইন (Data Processing Pipeline)
+
+একটি নন-কোডার ফ্রেন্ডলি ভিউ থেকে আমাদের ডাটা যেভাবে প্রসেস হয়:
+
+![Muradian Data Pipeline](docs/data_pipeline_flow.png)
+
+### 📊 আর্কিটেকচার ডায়াগ্রাম (Architecture Diagram)
+
+![Muradian Model Architecture](docs/architecture_whiteboard.png)
 
 ## 🛠 আমরা কি কি মেথড ফলো করেছি? (Methodology)
 
