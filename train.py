@@ -2,13 +2,13 @@ import os
 import time
 import math
 import torch
-from model import MiniGPT
-from config import MiniGPTConfig
+from model import MuradianModel
+from config import MuradianConfig
 from tokenizer import BPETokenizer
 from dataset import get_dataloader
 
 def train():
-    config = MiniGPTConfig()
+    config = MuradianConfig()
     
     # Setup device
     device = config.device
@@ -29,7 +29,7 @@ def train():
         return
 
     # Initialize model
-    model = MiniGPT(config)
+    model = MuradianModel(config)
     
     # Optimizer
     optimizer = model.configure_optimizers(config.weight_decay, config.learning_rate, (config.beta1, config.beta2), device_type)

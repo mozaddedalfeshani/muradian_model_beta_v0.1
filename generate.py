@@ -1,8 +1,8 @@
 import os
 import torch
 import torch.nn.functional as F
-from model import MiniGPT
-from config import MiniGPTConfig
+from model import MuradianModel
+from config import MuradianConfig
 from tokenizer import BPETokenizer
 
 class Generator:
@@ -16,10 +16,10 @@ class Generator:
         # Load config and model
         # For simplicity, we assume we can reconstruct config or it's saved
         # Here we use default config and override vocab_size
-        config = MiniGPTConfig()
+        config = MuradianConfig()
         config.vocab_size = self.tokenizer.get_vocab_size()
         
-        self.model = MiniGPT(config)
+        self.model = MuradianModel(config)
         state_dict = torch.load(model_path, map_location=device, weights_only=False)
         
         # Handle potential torch.compile prefix

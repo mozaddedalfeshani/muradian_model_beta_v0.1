@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 @dataclass
-class MiniGPTConfig:
+class MuradianConfig:
     # Model architecture
     vocab_size: int = 16384 # Scaled up from 8k
     context_length: int = 512

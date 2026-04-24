@@ -1,4 +1,4 @@
-# MiniGPT Beta v0.1
+# Muradian Model Beta v0.1
 
 [![Repo](https://img.shields.io/badge/GitHub-Repository-blue?logo=github)](https://github.com/mozaddedalfeshani/muradian_model_beta_v0.1)
 

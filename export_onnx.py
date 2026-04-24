@@ -1,13 +1,13 @@
 import torch
-from model import MiniGPT
-from config import MiniGPTConfig
+from model import MuradianModel
+from config import MuradianConfig
 
 def export_to_onnx(model_path, onnx_path="model.onnx"):
     # Load config (assuming default for now)
-    config = MiniGPTConfig()
+    config = MuradianConfig()
     # Note: In a real scenario, you'd load the vocab_size from the trained tokenizer
     
-    model = MiniGPT(config)
+    model = MuradianModel(config)
     # Load state dict
     state_dict = torch.load(model_path, map_location='cpu', weights_only=False)
     

@@ -2,10 +2,10 @@ import math
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
-from config import MiniGPTConfig
+from config import MuradianConfig
 
 class CausalSelfAttention(nn.Module):
-    def __init__(self, config: MiniGPTConfig):
+    def __init__(self, config: MuradianConfig):
         super().__init__()
         assert config.n_embd % config.n_head == 0
         # key, query, value projections for all heads, but in a batch
@@ -55,7 +55,7 @@ class CausalSelfAttention(nn.Module):
         return y
 
 class MLP(nn.Module):
-    def __init__(self, config: MiniGPTConfig):
+    def __init__(self, config: MuradianConfig):
         super().__init__()
         self.c_fc    = nn.Linear(config.n_embd, 4 * config.n_embd, bias=config.bias)
         self.gelu    = nn.GELU()
@@ -70,7 +70,7 @@ class MLP(nn.Module):
         return x
 
 class Block(nn.Module):
-    def __init__(self, config: MiniGPTConfig):
+    def __init__(self, config: MuradianConfig):
         super().__init__()
         self.ln_1 = nn.LayerNorm(config.n_embd, bias=config.bias)
         self.attn = CausalSelfAttention(config)
@@ -82,8 +82,8 @@ class Block(nn.Module):
         x = x + self.mlp(self.ln_2(x))
         return x
 
-class MiniGPT(nn.Module):
-    def __init__(self, config: MiniGPTConfig):
+class MuradianModel(nn.Module):
+    def __init__(self, config: MuradianConfig):
         super().__init__()
         assert config.vocab_size is not None
         assert config.context_length is not None
