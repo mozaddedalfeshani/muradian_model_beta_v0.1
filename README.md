@@ -1,58 +1,78 @@
-# MiniGPT: 15M Parameter Decoder-Only Transformer
+# Muradian Model Beta v0.1 (MiniGPT)
 
-This project implements a small GPT-style language model from scratch using PyTorch. It is designed for educational purposes and can be trained on custom datasets.
+[![Repo](https://img.shields.io/badge/GitHub-Repository-blue?logo=github)](https://github.com/mozaddedalfeshani/muradian_model_beta_v0.1)
 
-## Architecture Specs
-- **Parameters**: ~15M
-- **Layers**: 8
-- **Hidden Size**: 320
-- **Heads**: 10
-- **Context Length**: 512
-- **Vocab Size**: 8192 (BPE)
+এটি একটি কাস্টম **Decoder-Only Transformer** ল্যাঙ্গুয়েজ মডেল যা একদম স্ক্র্যাচ (Scratch) থেকে পাইটর্চ (PyTorch) ব্যবহার করে তৈরি করা হয়েছে। এই প্রজেক্টের মূল উদ্দেশ্য হলো একটি ছোট কিন্তু শক্তিশালী মডেল তৈরি করা যা নির্দিষ্ট তথ্যের (যেমন: ব্যক্তিগত ডাটা) ওপর ভিত্তি করে টেক্সট জেনারেট করতে পারে।
 
-## Project Structure
-- `config.py`: Hyperparameters and model configuration.
-- `model.py`: Transformer architecture implementation.
-- `tokenizer.py`: BPE tokenizer (using HuggingFace `tokenizers`).
-- `dataset.py`: PyTorch dataset and dataloader.
-- `train.py`: Full training pipeline.
-- `generate.py`: Inference script with sampling (top-k, top-p, temperature).
-- `export_onnx.py`: Script to export the model to ONNX format.
+## 🚀 এটি কিভাবে কাজ করে? (How it works)
 
-## Setup
-1. A virtual environment `.venv` has been created.
-2. Dependencies are listed in `requirements.txt`.
+এই মডেলটি একটি **Generative Pre-trained Transformer (GPT)** আর্কিটেকচার অনুসরণ করে। এটি ইনপুট হিসেবে কিছু টেক্সট নেয় এবং তার পরের সম্ভাব্য শব্দটি (Token) কি হতে পারে তা প্রেডিক্ট করে।
 
-To activate the environment:
+### কাজের ধাপসমূহ:
+1. **ডাটা প্রিপারেশন:** `prepare_personal_data.py` স্ক্রিপ্টের মাধ্যমে মুরাদের জীবনবৃত্তান্ত (Bio) এবং প্রজেক্ট ফাইলগুলো থেকে টেক্সট ডাটা সংগ্রহ করা হয়।
+2. **টোকেনাইজেশন:** টেক্সটগুলোকে সরাসরি মডেলে দেওয়া যায় না, তাই BPE (Byte Pair Encoding) ব্যবহার করে সেগুলোকে ছোট ছোট টোকেনে ভাগ করা হয়।
+3. **ট্রেনিং:** `train.py` ব্যবহার করে মডেলটিকে এই ডাটার ওপর ট্রেন করা হয় যাতে সে মুরাদের সম্পর্কে প্রশ্নের উত্তর দিতে পারে।
+4. **জেনারেশন:** ট্রেনিং শেষ হলে `generate.py` দিয়ে আমরা মডেলের সাথে কথা বলতে পারি।
+
+## 🛠 আমরা কি কি মেথড ফলো করেছি? (Methodology)
+
+এই মডেলটি তৈরির ক্ষেত্রে আধুনিক ডিপ লার্নিংয়ের বেশ কিছু উন্নত পদ্ধতি ব্যবহার করা হয়েছে:
+
+*   **Transformer Architecture:** ৮টি লেয়ার এবং ১০টি অ্যাটেনশন হেড বিশিষ্ট একটি ট্রান্সফর্মার ব্লক ব্যবহার করা হয়েছে।
+*   **BPE Tokenization:** HuggingFace `tokenizers` লাইব্রেরি ব্যবহার করে ৮১৯২ ভোকাব সাইজের একটি কাস্টম টোকেনাইজার তৈরি করা হয়েছে।
+*   **Flash Attention:** প্রসেসিং দ্রুত করার জন্য PyTorch-এর স্কেলড ডট প্রোডাক্ট অ্যাটেনশন ব্যবহার করা হয়েছে।
+*   **Optimization:**
+    *   **AdamW Optimizer:** মডেলের ওয়েট আপডেট করার জন্য ব্যবহৃত হয়েছে।
+    *   **Cosine LR Decay:** ট্রেনিংয়ের সময় লার্নিং রেট ধীরে ধীরে কমানোর জন্য এই শিডিউলার ব্যবহার করা হয়েছে।
+    *   **Weight Tying:** ইনপুট এমবেডিং এবং আউটপুট লেয়ারের ওয়েট শেয়ার করা হয়েছে যাতে প্যারামিটার সংখ্যা কম থাকে এবং পারফরম্যান্স ভালো হয়।
+*   **Weight Normalization:** লেয়ার নরমালিয়ালাইজেশন (LayerNorm) এবং ড্রপআউট (Dropout) ব্যবহার করা হয়েছে ওভারফিটিং রোধ করতে।
+
+## 📊 মডেল স্পেসিফিকেশন (Technical Specs)
+
+- **প্যারামিটার সংখ্যা:** ১৫ মিলিয়ন (~15M)
+- **লেয়ার (Layers):** ৮টি
+- **হিডেন সাইজ (Hidden Size):** ৩২০
+- **অ্যাটেনশন হেড (Heads):** ১০টি
+- **কনটেক্সট লেংথ (Context Length):** ৫১২ টোকেন
+- **ভোকাবুলারি সাইজ:** ৮১৯২
+
+## 📂 প্রজেক্ট স্ট্রাকচার
+
+- `model.py`: ট্রান্সফর্মার আর্কিটেকচারের মূল কোড।
+- `config.py`: হাইপার-প্যারামিটার এবং কনফিগারেশন।
+- `tokenizer.py`: BPE টোকেনাইজার হ্যান্ডলার।
+- `dataset.py`: ডাটা লোড করার পাইপলাইন।
+- `train.py`: ট্রেনিং স্ক্রিপ্ট।
+- `generate.py`: টেক্সট জেনারেশন বা চ্যাট স্ক্রিপ্ট।
+- `prepare_personal_data.py`: কাস্টম ডাটা প্রসেসিং টুল।
+- `export_onnx.py`: মডেলটিকে ONNX ফরম্যাটে এক্সপোর্ট করার টুল।
+
+## ⚙️ সেটাপ এবং ব্যবহার (Setup & Usage)
+
+### ১. পরিবেশ তৈরি করা
 ```bash
 source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-## How to Train
-1. Prepare your training data in `data/train.txt`. (A sample is already provided).
-2. Train the model:
+### ২. ডাটা প্রস্তুত করা
+মুরাদের পার্সোনাল ডাটা থেকে ট্রেনিং সেট তৈরি করতে:
+```bash
+python prepare_personal_data.py
+```
+
+### ৩. ট্রেনিং শুরু করা
 ```bash
 python train.py
 ```
-This will:
-- Train a BPE tokenizer on your data (if `tokenizer.json` doesn't exist).
-- Initialize the model.
-- Run the training loop and save checkpoints to `ckpt.pt` and the final model to `model.pt`.
 
-## How to Generate
-Once you have `model.pt` and `tokenizer.json`:
+### ৪. মডেলের সাথে কথা বলা
 ```bash
-python generate.py --prompt "User: Hello!\nAssistant:" --tokens 50 --temp 0.8
+python generate.py --prompt "User: Who is Murad?\nAssistant:" --tokens 100
 ```
 
-## Export to ONNX
-To export the trained model:
-```bash
-python export_onnx.py
-```
+## 📝 নোট
+এই প্রজেক্টটি একটি গবেষণামূলক কাজ এবং এটি ক্রমাগত উন্নত করা হচ্ছে। মুরাদের পোর্টফোলিও এবং এআই নিয়ে তার কাজের একটি অংশ হিসেবে এটি তৈরি।
 
-## Note on Python Version
-This project was initialized using the available Python version on the system (Python 3.14). If you specifically require Python 3.10, ensure it is installed and recreate the `.venv` with:
-```bash
-python3.10 -m venv .venv
-```
+---
+**Repository:** [https://github.com/mozaddedalfeshani/muradian_model_beta_v0.1](https://github.com/mozaddedalfeshani/muradian_model_beta_v0.1)
