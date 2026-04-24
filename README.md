@@ -1,4 +1,4 @@
-# Muradian Model Beta v0.1 (MiniGPT)
+# MiniGPT Beta v0.1
 
 [![Repo](https://img.shields.io/badge/GitHub-Repository-blue?logo=github)](https://github.com/mozaddedalfeshani/muradian_model_beta_v0.1)
 
@@ -9,10 +9,10 @@
 এই মডেলটি একটি **Generative Pre-trained Transformer (GPT)** আর্কিটেকচার অনুসরণ করে। এটি ইনপুট হিসেবে কিছু টেক্সট নেয় এবং তার পরের সম্ভাব্য শব্দটি (Token) কি হতে পারে তা প্রেডিক্ট করে।
 
 ### কাজের ধাপসমূহ:
-1. **ডাটা প্রিপারেশন:** `prepare_personal_data.py` স্ক্রিপ্টের মাধ্যমে মুরাদের জীবনবৃত্তান্ত (Bio) এবং প্রজেক্ট ফাইলগুলো থেকে টেক্সট ডাটা সংগ্রহ করা হয়।
+1. **ডাটা প্রিপারেশন:** `prepare_personal_data.py` বা আপনার নিজস্ব স্ক্রিপ্টের মাধ্যমে টেক্সট ডাটা সংগ্রহ এবং প্রসেস করা হয়।
 2. **টোকেনাইজেশন:** টেক্সটগুলোকে সরাসরি মডেলে দেওয়া যায় না, তাই BPE (Byte Pair Encoding) ব্যবহার করে সেগুলোকে ছোট ছোট টোকেনে ভাগ করা হয়।
-3. **ট্রেনিং:** `train.py` ব্যবহার করে মডেলটিকে এই ডাটার ওপর ট্রেন করা হয় যাতে সে মুরাদের সম্পর্কে প্রশ্নের উত্তর দিতে পারে।
-4. **জেনারেশন:** ট্রেনিং শেষ হলে `generate.py` দিয়ে আমরা মডেলের সাথে কথা বলতে পারি।
+3. **ট্রেনিং:** `train.py` ব্যবহার করে মডেলটিকে এই ডাটার ওপর ট্রেন করা হয় যাতে সে টেক্সট প্রেডিকশন এবং জেনারেশন করতে পারে।
+4. **জেনারেশন:** ট্রেনিং শেষ হলে `generate.py` দিয়ে আমরা মডেলের আউটপুট পরীক্ষা করতে পারি।
 
 ## 🛠 আমরা কি কি মেথড ফলো করেছি? (Methodology)
 
@@ -56,7 +56,7 @@ pip install -r requirements.txt
 ```
 
 ### ২. ডাটা প্রস্তুত করা
-মুরাদের পার্সোনাল ডাটা থেকে ট্রেনিং সেট তৈরি করতে:
+আপনার নিজস্ব টেক্সট ডাটা থেকে ট্রেনিং সেট তৈরি করতে:
 ```bash
 python prepare_personal_data.py
 ```
@@ -66,13 +66,13 @@ python prepare_personal_data.py
 python train.py
 ```
 
-### ৪. মডেলের সাথে কথা বলা
+### ৪. মডেল ব্যবহার করা
 ```bash
-python generate.py --prompt "User: Who is Murad?\nAssistant:" --tokens 100
+python generate.py --prompt "User: Hello!\nAssistant:" --tokens 100
 ```
 
 ## 📝 নোট
-এই প্রজেক্টটি একটি গবেষণামূলক কাজ এবং এটি ক্রমাগত উন্নত করা হচ্ছে। মুরাদের পোর্টফোলিও এবং এআই নিয়ে তার কাজের একটি অংশ হিসেবে এটি তৈরি।
+এই প্রজেক্টটি একটি গবেষণামূলক কাজ এবং এটি ক্রমাগত উন্নত করা হচ্ছে। এআই এবং ল্যাঙ্গুয়েজ মডেল নিয়ে এক্সপেরিমেন্ট করার জন্য এটি তৈরি করা হয়েছে।
 
 ---
 **Repository:** [https://github.com/mozaddedalfeshani/muradian_model_beta_v0.1](https://github.com/mozaddedalfeshani/muradian_model_beta_v0.1)
